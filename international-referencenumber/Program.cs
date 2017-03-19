@@ -22,13 +22,13 @@ namespace international_referencenumber
 
                 if (menuChoice == 1)
                 {
-                    ValidityCheckAndCreation(4,20,1);
+                    ValidityCheckAndCreation(4, 20, 1);
                 }
                 if (menuChoice == 2)
                 {
-                    ValidityCheckAndCreation(3,19,2);
+                    ValidityCheckAndCreation(3, 19, 2);
                 }
-                
+
             } while (menuChoice != 3); // menu 3 for exit
             Console.ReadKey();
         }
@@ -43,7 +43,7 @@ namespace international_referencenumber
             return Convert.ToInt32(result); // don't select empty line
         }
 
-        private static void ValidityCheckAndCreation(int referMin, int referMax, int operOption )
+        private static void ValidityCheckAndCreation(int referMin, int referMax, int operOption)
         {
             if (operOption == 1)
             {
@@ -54,31 +54,37 @@ namespace international_referencenumber
             {
                 Console.WriteLine("Please input number for creating reference number (3-19 digits): ");
             }
-            
+
             string referenceNumber = NumberInput(referMin, referMax, operOption);
-            int checksum10 = calculateChecksum(referenceNumber, operOption); // call method for calculating checksum
-            referenceNumber = FormatReference(referenceNumber, checksum10, operOption); // if 2 then add, if 1 then no adding
-            //Console.WriteLine(referenceNumber);
+            int checksum10 = CalculateChecksum(referenceNumber, operOption); // call method for calculating checksum
+            FormatReference(referenceNumber, checksum10, operOption); // if 2 then add, if 1 then no adding
+            // Console.WriteLine(referenceNumber);
         }
 
         private static string NumberInput(int v1, int v2, int v3)
         {
             string referenceNumber;
-        b2:
+            b2:
             {
                 referenceNumber = Console.ReadLine();
                 referenceNumber = referenceNumber.Replace(" ", "");
-                if (v3 == 1)
+                if (v3 == 1) // v3 ="1" check validity
                 {
                     if (referenceNumber[0] == 'R' && referenceNumber[1] == 'F')
                     {
-                        // referenceNumber = referenceNumber.Insert(1, "0"); // adding 2715 into the end 
-                        // referenceNumber = referenceNumber.Insert(3, "0");
-                        referenceNumber = referenceNumber.Replace('R', '2'); // 27
-                        referenceNumber = referenceNumber.Insert(1, "7");
-                        referenceNumber = referenceNumber.Replace('F', '1'); // 15
-                        referenceNumber = referenceNumber.Insert(3, "5");
-                        Console.WriteLine("mr referee{0}", referenceNumber);
+                        referenceNumber=referenceNumber.Remove(0,2);
+                        
+                        referenceNumber = referenceNumber.Insert(referenceNumber.Length, "2"); // 27 R
+                        referenceNumber = referenceNumber.Insert(referenceNumber.Length, "7");
+                        referenceNumber = referenceNumber.Insert(referenceNumber.Length, "1"); // 15 F
+                        referenceNumber = referenceNumber.Insert(referenceNumber.Length, "5");
+
+                        char a =referenceNumber[0];
+                        char b= referenceNumber[1];
+                        referenceNumber=referenceNumber.Remove(0,2);
+                        referenceNumber = referenceNumber + a + b;
+                        // Console.WriteLine("mr referee {0}", referenceNumber);
+                        
                         v1 += 4;
                         v2 += 4; // fix the logic somewhere TODO!!!
                     }
@@ -95,9 +101,9 @@ namespace international_referencenumber
                 }
                 else goto o1;
             }
-        o1:
+            o1:
             // add RF = 2715. And also add 00
-            if (v3 == 2)
+            if (v3 == 2) // v3 = "2" = create new ref
             {
                 referenceNumber = referenceNumber + 271500;
             }
@@ -105,55 +111,71 @@ namespace international_referencenumber
             return referenceNumber;
         }
 
-        private static int calculateChecksum(string referenceNumber, int v)
+        private static int CalculateChecksum(string referenceNumber, int v)
         {
-            int calculationSum = 0;
-            int[] weightedMultipler = new int[] { 7, 3, 1, 7, 3, 1, 7, 3, 1, 7, 3, 1, 7, 3, 1, 7, 3, 1, 7 }; // new int[19] 
+            int checksum1 = 0;
+            decimal counting = 0;
+            decimal referenceNumberinteger = Convert.ToDecimal(referenceNumber);
 
+            counting = (referenceNumberinteger % 97);
+            checksum1 = (int)(98 - counting);
+            Console.WriteLine("jakojään. {0} tark. {1}", counting, checksum1);
             if (v == 1)
             {
-                referenceNumber = referenceNumber.Remove(referenceNumber.Length - 1);
-                // First remove checksum from the end
+                checksum1 = (int)counting;
             }
-            var referenceInt = referenceNumber.Select(ch => ch - '0').ToArray();
-            Array.Reverse(referenceInt); // reverse array for right to left calcs
-
-            for (int i = 0; i < referenceInt.Length; i++) // calc 
-            {
-                calculationSum += (referenceInt[i] * weightedMultipler[i]); // from right to left multiply as the array is reversed and shortened
-            }
-
-            int sumCeil = (int)(Math.Ceiling(calculationSum / 10.0d) * 10);
-            int checksum1 = sumCeil - calculationSum;
 
             return checksum1;
         }
 
         private static string FormatReference(string referenceNumber, int checksum4, int v)
         {
-            if (v == 2)
-            {
-                referenceNumber = referenceNumber + checksum4;
-            }
-            // Console.WriteLine(referenceNumber);
 
-            var referenceInt = referenceNumber.Select(ch => ch - '0').ToArray();
-            if (referenceInt[referenceInt.Length - 1] == checksum4) // compare last number
+            string end2 = checksum4.ToString();
+            // If under 10, add extra zero
+            if (checksum4 < 10)
             {
-                // for (int j = 0; j < (referenceInt.Length - 1); j++)
-                for (int j = (referenceInt.Length); j > 0; j--)
-                {
-                    j -= 5;
-                    if (j < 1) goto o2;
-                    referenceNumber = referenceNumber.Insert(j, " ");
-                }
-            o2:
-                Console.WriteLine("{0} OK", referenceNumber);
+                end2 = '0' + end2;
             }
             else
-                Console.WriteLine("Referencenumber Incorrect. {0} != {1}", (referenceInt[referenceInt.Length - 1]), checksum4);
+            {
+                // if over 10, ok
 
-            return referenceNumber;
+            }
+
+            if (v == 2) // v = "2" = create new ref
+            {
+                referenceNumber = "RF" + end2 + referenceNumber;
+                referenceNumber = referenceNumber.Remove(referenceNumber.Length - 6);
+
+                var referenceInt = referenceNumber.Select(ch => ch - '0').ToArray();
+                // for (int j = 0; j < (referenceInt.Length - 1); j++)
+                for (int j = 0; j < (referenceInt.Length-1); j++)
+                {
+                    j += 4;
+                     if (j > referenceInt.Length-1) goto o2;
+                    referenceNumber = referenceNumber.Insert(j, " ");
+                }
+                 o2:
+                Console.WriteLine("{0}", referenceNumber);
+            }
+            // Console.WriteLine(referenceNumber);
+            //
+
+            if (v == 1) // v="1" = check validity
+            {
+                var referenceInt = referenceNumber.Select(ch => ch - '0').ToArray();
+                if (referenceInt[referenceInt.Length - 1] == checksum4) // compare last number
+                {
+                    
+                    Console.WriteLine("{0} = {1} --> Referencenumber OK", checksum4, referenceInt[referenceInt.Length - 1]);
+                }
+                else
+                    Console.WriteLine("Referencenumber Incorrect. {0} != {1}", (referenceInt[referenceInt.Length - 1]),
+                        checksum4);
+
+            }
+             return referenceNumber;
         }
     }
 }
